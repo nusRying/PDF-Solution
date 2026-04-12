@@ -15,6 +15,9 @@ class RemediationAction(BaseModel):
     source: str
     description: str
     changed: bool
+    field_name: str | None = None
+    before_value: str | None = None
+    after_value: str | None = None
     before_text: str | None = None
     after_text: str | None = None
     confidence: float | None = None
