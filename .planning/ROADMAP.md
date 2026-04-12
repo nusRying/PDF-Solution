@@ -2,7 +2,7 @@
 
 ## Phases
 
-- [ ] **Phase 1: Foundation & Skill Architecture** - Platform skeleton, Skill Registry core, and Compliance Profile mapping.
+- [x] **Phase 1: Foundation & Skill Architecture** - Platform skeleton, Skill Registry core, and Compliance Profile mapping.
 - [ ] **Phase 2: Parsing & Layout Foundation** - Canonical document model, PDF parser internals, and OCR/Layout intelligence.
 - [ ] **Phase 3: Deterministic Remediation** - Registration of core remediation skills and standards-grade PDF writer path.
 - [ ] **Phase 4: Validation Engine** - Matterhorn and WCAG validation skills, rule catalog, and EARL reporting.
@@ -21,7 +21,7 @@
   3. A ComplianceProfile can selectively activate skills from the registry.
   4. Observability baseline (logs/metrics) is active for the pipeline stages.
 **Plans**: 3 plans
-- [ ] 01-foundation-skill-architecture-01-PLAN.md — Core Skill Architecture & Registry
+- [x] 01-foundation-skill-architecture-01-PLAN.md — Core Skill Architecture & Registry
 - [ ] 01-foundation-skill-architecture-02-PLAN.md — Initial Skills & Profile Mapping
 - [ ] 01-foundation-skill-architecture-03-PLAN.md — Pipeline Integration & CLI Skeleton
 
@@ -33,7 +33,10 @@
   1. Selected PDF SDK is integrated and can extract low-level structure (tags, MCIDs).
   2. PDFs (digital and scanned) are converted into a stable Canonical Document Model.
   3. OCR and Layout engines correctly identify tables, figures, and reading-order blocks.
-**Plans**: TBD
+**Plans**: 3 plans
+- [x] 02-parsing-layout-foundation-01-PLAN.md — Model & Parser Enhancement
+- [ ] 02-parsing-layout-foundation-02-PLAN.md — Reading Order & Canonicalization
+- [ ] 02-parsing-layout-foundation-03-PLAN.md — Layout Validation Skills
 
 ### Phase 3: Deterministic Remediation
 **Goal**: Apply high-confidence structural repairs and generate accessible PDF output.
@@ -43,7 +46,10 @@
   1. Procedural rules for tagging and metadata are successfully migrated to the Skill Registry.
   2. The system can generate a remediated PDF with valid structure trees and role maps.
   3. Every remediation action records its Skill ID and provenance in the audit log.
-**Plans**: TBD
+**Plans**: 3 plans
+- [ ] 03-deterministic-remediation-01-PLAN.md — Structural Remediation Skills
+- [ ] 03-deterministic-remediation-02-PLAN.md — Content & Metadata Remediation Skills
+- [ ] 03-deterministic-remediation-03-PLAN.md — PDF Writer & Integration
 
 ### Phase 4: Validation Engine
 **Goal**: Provide standards-compliant validation reports mapped to Matterhorn and WCAG.
@@ -53,7 +59,10 @@
   1. Validation skills are executed based on the active ComplianceProfile.
   2. Findings are correctly mapped to Matterhorn checkpoints and WCAG criteria.
   3. The system emits machine-readable reports (EARL/JSON) for every job.
-**Plans**: TBD
+**Plans**: 3 plans
+- [ ] 04-validation-engine-01-PLAN.md — Validation Foundation & Rule Catalog
+- [ ] 04-validation-engine-02-PLAN.md — Matterhorn Protocol Coverage
+- [ ] 04-validation-engine-03-PLAN.md — Machine-Readable Reporting & External Tools
 
 ### Phase 5: Review Dashboard & AI Assist
 **Goal**: Enable human-in-the-loop resolution for ambiguous accessibility issues.
@@ -80,9 +89,9 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Skill Architecture | 0/3 | In Progress | - |
-| 2. Parsing & Layout Foundation | 0/1 | Not started | - |
-| 3. Deterministic Remediation | 0/1 | Not started | - |
-| 4. Validation Engine | 0/1 | Not started | - |
+| 1. Foundation & Skill Architecture | 1/3 | In Progress | - |
+| 2. Parsing & Layout Foundation | 1/3 | In Progress | - |
+| 3. Deterministic Remediation | 0/3 | Not started | - |
+| 4. Validation Engine | 0/3 | Not started | - |
 | 5. Review Dashboard & AI Assist | 0/1 | Not started | - |
 | 6. Hardening & Performance | 0/1 | Not started | - |
