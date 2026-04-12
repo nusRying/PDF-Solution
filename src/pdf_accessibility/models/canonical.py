@@ -13,6 +13,22 @@ class ContentSource(str, Enum):
     ocr = "ocr"
 
 
+class CanonicalRole(str, Enum):
+    heading1 = "heading1"
+    heading2 = "heading2"
+    heading3 = "heading3"
+    heading4 = "heading4"
+    heading5 = "heading5"
+    heading6 = "heading6"
+    list = "list"
+    list_item = "list_item"
+    table = "table"
+    figure = "figure"
+    caption = "caption"
+    text = "text"
+    artifact = "artifact"
+
+
 class CanonicalBlock(BaseModel):
     block_id: str
     page_number: int
@@ -21,6 +37,10 @@ class CanonicalBlock(BaseModel):
     text: str
     char_count: int
     confidence: float | None = None
+    role: CanonicalRole = CanonicalRole.text
+    font_size: float | None = None
+    font_name: str | None = None
+    font_flags: int | None = None
 
 
 class CanonicalPage(BaseModel):

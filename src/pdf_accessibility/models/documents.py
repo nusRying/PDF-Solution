@@ -44,6 +44,9 @@ class ParserTextBlock(BaseModel):
     bbox: BoundingBox
     text: str
     char_count: int
+    font_size: float | None = None
+    font_name: str | None = None
+    font_flags: int | None = None
 
 
 class ParserPageSummary(BaseModel):
