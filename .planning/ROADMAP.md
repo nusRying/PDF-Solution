@@ -7,7 +7,7 @@
 - [ ] **Phase 3: Deterministic Remediation** - Registration of core remediation skills and standards-grade PDF writer path.
 - [ ] **Phase 4: Validation Engine** - Matterhorn and WCAG validation skills, rule catalog, and EARL reporting.
 - [ ] **Phase 5: Review Dashboard & AI Assist** - Human-in-the-loop review UI and AI-assisted remediation suggestions.
-- [ ] **Phase 6: Hardening & Performance** - Scalability, observability, deployment artifacts, and contractual benchmark runs.
+- [ ] **Phase 6: Operations & Hardening** - Dockerization, production-ready queue, cloud storage, security, and performance benchmarks.
 
 ## Phase Details
 
@@ -76,16 +76,22 @@
 - [ ] 05-01-PLAN.md — AI Assist Service & Skill
 - [ ] 05-02-PLAN.md — Review Service & Model Updates
 - [ ] 05-03-PLAN.md — Review API & Integration
+**UI hint**: yes
 
-### Phase 6: Hardening & Performance
-**Goal**: Meet contractual performance and scalability requirements for production.
+### Phase 6: Operations & Hardening
+**Goal**: Deploy a production-grade, secure, and performant platform.
 **Depends on**: Phase 5
-**Requirements**: OPS-02, OPS-04
+**Requirements**: OPS-02, OPS-04, OPS-05, OPS-06, OPS-07, OPS-08
 **Success Criteria** (what must be TRUE):
-  1. System achieves >= 30 pages/sec throughput on the benchmark corpus.
-  2. Deployment is fully automated via Docker and Kubernetes (Helm).
-  3. 95% auto-fix rate and 98% PAC pass rate targets are verified on the gold corpus.
-**Plans**: TBD
+  1. Platform is dockerized (FastAPI + Tesseract + Pikepdf) and deployable via Helm.
+  2. Production-ready job queue (Celery/Redis or Postgres) replaces the in-memory queue.
+  3. Cloud storage connectors (S3/Azure Blob) are integrated for documents and artifacts.
+  4. System achieves >= 30 pages/sec throughput and meets latency targets on benchmark corpus.
+  5. Final security hardening is applied (API keys, CORS, rate limiting).
+**Plans**: 3 plans
+- [ ] 06-operations-hardening/06-01-PLAN.md — Dockerization & Cloud Storage Integration
+- [ ] 06-operations-hardening/06-02-PLAN.md — Production Job Queue & Security Hardening
+- [ ] 06-operations-hardening/06-03-PLAN.md — Performance Benchmarking & Contractual Validation
 
 ## Progress Table
 
@@ -96,4 +102,4 @@
 | 3. Deterministic Remediation | 0/3 | Not started | - |
 | 4. Validation Engine | 0/3 | Not started | - |
 | 5. Review Dashboard & AI Assist | 0/3 | Not started | - |
-| 6. Hardening & Performance | 0/1 | Not started | - |
+| 6. Operations & Hardening | 0/3 | Not started | - |
