@@ -72,8 +72,10 @@
   1. Reviewers can triage documents and inspect tag trees/reading order.
   2. AI-assisted skills provide alt-text and heading suggestions for approval.
   3. Human decisions are captured and reflected in the final remediated output.
-**Plans**: TBD
-**UI hint**: yes
+**Plans**: 3 plans
+- [ ] 05-01-PLAN.md — AI Assist Service & Skill
+- [ ] 05-02-PLAN.md — Review Service & Model Updates
+- [ ] 05-03-PLAN.md — Review API & Integration
 
 ### Phase 6: Hardening & Performance
 **Goal**: Meet contractual performance and scalability requirements for production.
@@ -93,5 +95,5 @@
 | 2. Parsing & Layout Foundation | 1/3 | In Progress | - |
 | 3. Deterministic Remediation | 0/3 | Not started | - |
 | 4. Validation Engine | 0/3 | Not started | - |
-| 5. Review Dashboard & AI Assist | 0/1 | Not started | - |
+| 5. Review Dashboard & AI Assist | 0/3 | Not started | - |
 | 6. Hardening & Performance | 0/1 | Not started | - |
