@@ -70,6 +70,9 @@ class ParserDocumentMetadata(BaseModel):
     producer: str | None = None
     creation_date: str | None = None
     modification_date: str | None = None
+    is_tagged: bool = False
+    has_struct_tree: bool = False
+    is_pdf_ua_identifier_present: bool = False
 
 
 class ParserArtifact(BaseModel):

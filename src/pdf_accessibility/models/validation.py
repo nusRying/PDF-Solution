@@ -6,7 +6,7 @@ from enum import Enum
 from pydantic import BaseModel, Field
 
 from pdf_accessibility.models.compliance import ComplianceProfile, ComplianceStandard
-from pdf_accessibility.models.documents import utc_now
+from pdf_accessibility.models.documents import BoundingBox, utc_now
 
 
 class ValidationSeverity(str, Enum):
@@ -32,6 +32,8 @@ class ValidationFinding(BaseModel):
     severity: ValidationSeverity
     message: str
     page_number: int | None = None
+    block_id: str | None = None
+    bbox: BoundingBox | None = None
     source: str
     standards: list[StandardMapping] = Field(default_factory=list)
 

@@ -29,6 +29,19 @@ class CanonicalRole(str, Enum):
     artifact = "artifact"
 
 
+class CanonicalMetadata(BaseModel):
+    title: str | None = None
+    author: str | None = None
+    subject: str | None = None
+    language: str | None = None
+    keywords: str | None = None
+    creator: str | None = None
+    producer: str | None = None
+    is_tagged: bool = False
+    has_struct_tree: bool = False
+    is_pdf_ua_identifier_present: bool = False
+
+
 class CanonicalBlock(BaseModel):
     block_id: str
     page_number: int
@@ -36,6 +49,7 @@ class CanonicalBlock(BaseModel):
     bbox: BoundingBox
     text: str
     char_count: int
+    alt_text: str | None = None
     confidence: float | None = None
     role: CanonicalRole = CanonicalRole.text
     font_size: float | None = None
@@ -64,4 +78,5 @@ class CanonicalDocument(BaseModel):
     total_block_count: int
     total_text_char_count: int
     ocr_page_count: int
+    metadata: CanonicalMetadata = Field(default_factory=CanonicalMetadata)
     pages: list[CanonicalPage]
