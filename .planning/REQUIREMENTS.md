@@ -7,7 +7,7 @@
 |----|-------------|--------|
 | INGEST-01 | REST API for PDF upload and job management | Pending |
 | INGEST-02 | CLI for batch processing | Pending |
-| INGEST-03 | Cloud connectors (S3/SharePoint/GDrive) | Pending |
+| INGEST-03 | Ingestion cloud connectors (S3/SharePoint/GDrive) | Pending |
 
 ### Core Document Model (CORE)
 | ID | Requirement | Status |
@@ -56,9 +56,13 @@
 | ID | Requirement | Status |
 |----|-------------|--------|
 | OPS-01 | Job orchestrator with profile-based routing | Pending |
-| OPS-02 | Docker and Kubernetes deployment artifacts | Pending |
+| OPS-02 | Dockerization (FastAPI + Tesseract + Pikepdf) | Pending |
 | OPS-03 | Observability (logs, traces, metrics) | Pending |
 | OPS-04 | Performance target: >= 30 pages/sec throughput | Pending |
+| OPS-05 | Production-ready Job Queue (Celery/Redis or Postgres) | Pending |
+| OPS-06 | Cloud storage connectors (S3/Azure Blob) for document/artifact storage | Pending |
+| OPS-07 | Comprehensive performance benchmarking (throughput and latency) | Pending |
+| OPS-08 | Final security hardening (API keys, CORS, rate limiting) | Pending |
 
 ## Traceability
 
@@ -90,3 +94,7 @@
 | OPS-02 | Phase 6 | Pending |
 | OPS-03 | Phase 1 | Pending |
 | OPS-04 | Phase 6 | Pending |
+| OPS-05 | Phase 6 | Pending |
+| OPS-06 | Phase 6 | Pending |
+| OPS-07 | Phase 6 | Pending |
+| OPS-08 | Phase 6 | Pending |
