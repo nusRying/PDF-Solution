@@ -17,9 +17,18 @@ from pdf_accessibility.skills.validation.image_only import ImageOnlyValidationSk
 from pdf_accessibility.skills.validation.layout import HeadingStructureSkill, ReadingOrderJumpSkill
 from pdf_accessibility.skills.validation.missing_blocks import MissingBlocksValidationSkill
 from pdf_accessibility.skills.validation.ocr_usage import OCRUsageValidationSkill
-from pdf_accessibility.skills.validation.headings import HeadingHierarchyValidationSkill
-from pdf_accessibility.skills.validation.metadata import DocumentTitleValidationSkill
-from pdf_accessibility.skills.validation.figures import FigureAltTextValidationSkill
+from pdf_accessibility.skills.validation.structural import (
+    HeadingHierarchySkill,
+    FirstHeadingSkill,
+    TableTHSkill,
+)
+from pdf_accessibility.skills.validation.content import FigureAltSkill
+from pdf_accessibility.skills.validation.metadata import DocumentLanguageSkill, PageTitleSkill
+from pdf_accessibility.skills.validation.document import (
+    MarkInfoSkill,
+    StructTreeSkill,
+    PDFUAIdentifierSkill,
+)
 
 # Initialize Registry
 _registry = get_registry()
@@ -28,9 +37,15 @@ _registry.register_validation(MissingBlocksValidationSkill())
 _registry.register_validation(OCRUsageValidationSkill())
 _registry.register_validation(ReadingOrderJumpSkill())
 _registry.register_validation(HeadingStructureSkill())
-_registry.register_validation(HeadingHierarchyValidationSkill())
-_registry.register_validation(DocumentTitleValidationSkill())
-_registry.register_validation(FigureAltTextValidationSkill())
+_registry.register_validation(HeadingHierarchySkill())
+_registry.register_validation(FirstHeadingSkill())
+_registry.register_validation(TableTHSkill())
+_registry.register_validation(FigureAltSkill())
+_registry.register_validation(DocumentLanguageSkill())
+_registry.register_validation(PageTitleSkill())
+_registry.register_validation(MarkInfoSkill())
+_registry.register_validation(StructTreeSkill())
+_registry.register_validation(PDFUAIdentifierSkill())
 
 
 def run_validation_pipeline(
