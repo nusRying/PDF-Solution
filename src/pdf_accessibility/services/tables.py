@@ -44,6 +44,10 @@ class TableDetectionService:
             # Use fitz's sophisticated table finder
             tabs = fitz_page.find_tables()
             
+            if not tabs.tables:
+                doc.close()
+                return self._detect_tables_heuristic(page)
+
             for tab in tabs:
                 canonical_rows = []
                 # Extract cells and map to our canonical blocks

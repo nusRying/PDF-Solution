@@ -59,6 +59,8 @@ def test_table_and_form_detection_and_tagging(client: TestClient, tmp_path: Path
     
     # 2. Wait for processing
     job_payload = _wait_for_terminal_job_state(client, job_id)
+    if job_payload["status"] == "failed":
+        print(f"\nJOB FAILED with error: {job_payload.get('error')}")
     assert job_payload["status"] == "succeeded"
     
     # 3. Verify Canonical Output contains tables and forms

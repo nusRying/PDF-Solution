@@ -6,10 +6,10 @@ from pdf_accessibility.models.validation import ValidationFinding, ValidationSev
 from pdf_accessibility.skills.base import SkillCategory, ValidationSkill
 
 
-class DocumentLanguageSkill(ValidationSkill):
+class DocumentLanguageValidationSkill(ValidationSkill):
     @property
     def skill_id(self) -> str:
-        return "VALID-WCAG-3.1.1"
+        return "VALID-META-002"
 
     @property
     def name(self) -> str:
@@ -45,10 +45,10 @@ class DocumentLanguageSkill(ValidationSkill):
         return findings
 
 
-class PageTitleSkill(ValidationSkill):
+class DocumentTitleValidationSkill(ValidationSkill):
     @property
     def skill_id(self) -> str:
-        return "VALID-WCAG-2.4.2"
+        return "VALID-META-001"
 
     @property
     def name(self) -> str:
@@ -77,7 +77,7 @@ class PageTitleSkill(ValidationSkill):
                 ValidationFinding(
                     rule_id=self.skill_id,
                     severity=ValidationSeverity.error,
-                    message="Document title metadata is not set",
+                    message="Document title is missing",
                     source=self.name,
                 )
             )

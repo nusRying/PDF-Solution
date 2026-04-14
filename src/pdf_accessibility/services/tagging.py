@@ -79,6 +79,17 @@ class TaggingEngine:
                         K=pikepdf.Array()
                     ))
                     struct_tree_root.K.append(table_elem)
+
+                    if table.caption:
+                        caption_tag = self.map_role_to_tag(CanonicalRole.caption)
+                        caption_elem = pdf.make_indirect(pikepdf.Dictionary(
+                            Type=pikepdf.Name("/StructElem"),
+                            S=pikepdf.Name(caption_tag),
+                            P=table_elem,
+                            K=pikepdf.Array(),
+                            Alt=table.caption
+                        ))
+                        table_elem.K.append(caption_elem)
                     
                     for row in table.rows:
                         row_tag = self.map_role_to_tag(CanonicalRole.table_row)
@@ -124,6 +135,21 @@ class TaggingEngine:
                         Alt=form.tooltip or form.name
                     ))
                     struct_tree_root.K.append(form_elem)
+                    
+                    # Link Widget Annotation
+                    pdf_page = pdf.pages[page_idx]
+                    if "/Annots" in pdf_page:
+                        for annot in pdf_page.Annots:
+                            if annot.get("/Subtype") == "/Widget":
+                                # Match by field name if available
+                                if "/T" in annot and str(annot.T) == form.name:
+                                    objr = pikepdf.Dictionary(
+                                        Type=pikepdf.Name("/OBJR"),
+                                        Obj=annot
+                                    )
+                                    form_elem.K.append(objr)
+                                    annot.Pg = pdf_page.obj
+                                    break
 
                 elif item_type == "block":
                     block = item_data

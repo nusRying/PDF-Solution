@@ -11,7 +11,10 @@ from pdf_accessibility.models.canonical import (
 )
 from pdf_accessibility.models.validation import ValidationSeverity
 from pdf_accessibility.skills.validation.content import FigureAltSkill
-from pdf_accessibility.skills.validation.metadata import DocumentLanguageSkill, PageTitleSkill
+from pdf_accessibility.skills.validation.metadata import (
+    DocumentLanguageValidationSkill,
+    DocumentTitleValidationSkill,
+)
 from pdf_accessibility.core.settings import Settings
 
 @pytest.fixture
@@ -98,8 +101,8 @@ def test_figure_alt_skill(settings):
     assert len(findings) == 1
     assert findings[0].rule_id == "VALID-MH-14-003"
 
-def test_document_language_skill(settings):
-    skill = DocumentLanguageSkill()
+def test_document_language_validation_skill(settings):
+    skill = DocumentLanguageValidationSkill()
 
     # Valid: Language set
     doc_valid = CanonicalDocument(
@@ -128,10 +131,10 @@ def test_document_language_skill(settings):
     )
     findings = skill.validate(doc_invalid, settings)
     assert len(findings) == 1
-    assert findings[0].rule_id == "VALID-WCAG-3.1.1"
+    assert findings[0].rule_id == "VALID-META-002"
 
-def test_page_title_skill(settings):
-    skill = PageTitleSkill()
+def test_document_title_validation_skill(settings):
+    skill = DocumentTitleValidationSkill()
 
     # Valid: Title set
     doc_valid = CanonicalDocument(
@@ -160,4 +163,4 @@ def test_page_title_skill(settings):
     )
     findings = skill.validate(doc_invalid, settings)
     assert len(findings) == 1
-    assert findings[0].rule_id == "VALID-WCAG-2.4.2"
+    assert findings[0].rule_id == "VALID-META-001"

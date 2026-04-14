@@ -18,6 +18,7 @@ class SkillCategory(str, Enum):
     lists = "lists"
     tables = "tables"
     figures = "figures"
+    forms = "forms"
     metadata = "metadata"
     ocr = "ocr"
     reading_order = "reading-order"

@@ -23,12 +23,17 @@ from pdf_accessibility.skills.validation.structural import (
     TableTHSkill,
 )
 from pdf_accessibility.skills.validation.content import FigureAltSkill
-from pdf_accessibility.skills.validation.metadata import DocumentLanguageSkill, PageTitleSkill
+from pdf_accessibility.skills.validation.metadata import (
+    DocumentLanguageValidationSkill,
+    DocumentTitleValidationSkill,
+)
 from pdf_accessibility.skills.validation.document import (
     MarkInfoSkill,
     StructTreeSkill,
     PDFUAIdentifierSkill,
 )
+from pdf_accessibility.skills.validation.tables import TableStructureSkill
+from pdf_accessibility.skills.validation.forms import FormFieldValidationSkill
 
 # Initialize Registry
 _registry = get_registry()
@@ -41,11 +46,13 @@ _registry.register_validation(HeadingHierarchySkill())
 _registry.register_validation(FirstHeadingSkill())
 _registry.register_validation(TableTHSkill())
 _registry.register_validation(FigureAltSkill())
-_registry.register_validation(DocumentLanguageSkill())
-_registry.register_validation(PageTitleSkill())
+_registry.register_validation(DocumentLanguageValidationSkill())
+_registry.register_validation(DocumentTitleValidationSkill())
 _registry.register_validation(MarkInfoSkill())
 _registry.register_validation(StructTreeSkill())
 _registry.register_validation(PDFUAIdentifierSkill())
+_registry.register_validation(TableStructureSkill())
+_registry.register_validation(FormFieldValidationSkill())
 
 
 def run_validation_pipeline(

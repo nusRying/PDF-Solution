@@ -9,7 +9,8 @@
 - [x] **Phase 5: Review Dashboard & AI Assist** - Human-in-the-loop review API and AI-assisted remediation suggestions.
 - [x] **Phase 6: Operations & Hardening** - Dockerization, production-ready queue, cloud storage, and performance benchmarks.
 - [x] **Phase 7: Structural Tagging & PDF/UA Write-back** - Advanced structural tagging engine and PDF/UA-1 compliant output delivery.
-- [ ] **Phase 8: Advanced Semantic Structures (Tables & Forms)** - Complex grid detection, header mapping, and AcroForm extraction/tagging.
+- [x] **Phase 8: Advanced Semantic Structures (Tables & Forms)** - Complex grid detection, header mapping, and AcroForm extraction/tagging.
+- [x] **Phase 9: Compliance Hardening & Logical Sequencing** - Final compliance polish, form tab order, and validation skills.
 
 ## Implementation Details
 
@@ -56,13 +57,11 @@
 - Precise content stream marking using `BDC/EMC` operators and MCIDs.
 - Compliance with PDF/UA-1 via `/MarkInfo`, `/Lang`, and XMP metadata injection.
 
-### Phase 8: Advanced Semantic Structures (Tables & Forms) 🚧
-**Goal**: Implement comprehensive table and form detection and remediation.
-**Requirements**: TBL-01, TBL-02, TBL-03, FRM-01, FRM-02, TAG-01, TAG-02
-**Plans**: 3 plans
-- [ ] 08-01-PLAN.md — Table & Form Models and Detection Services
-- [ ] 08-02-PLAN.md — Table & Form Remediation Skills
-- [ ] 08-03-PLAN.md — Advanced Tagging & Verification
+### Phase 8: Advanced Semantic Structures (Tables & Forms) ✅
+**Accomplishments**:
+- Implemented `TableDetectionService` with heuristic fallback and `FormDetectionService` for AcroForms.
+- Created `TableRepairSkill` and `FormRepairSkill` for automated semantic remediation.
+- Enhanced `TaggingEngine` to produce nested structural tags (TR, TH, TD, Form) and PDF/UA-1 compliant attributes.
 
 ---
 
@@ -77,4 +76,5 @@
 | 5. Review Dashboard & AI Assist | 3/3 | Complete | 2026-04-13 |
 | 6. Operations & Hardening | 3/3 | Complete | 2026-04-13 |
 | 7. Structural Tagging & PDF/UA Write-back | 3/3 | Complete | 2026-04-13 |
-| 8. Advanced Semantic Structures (Tables & Forms) | 0/3 | In Progress | - |
+| 8. Advanced Semantic Structures (Tables & Forms) | 3/3 | Complete | 2026-04-14 |
+| 9. Compliance Hardening & Logical Sequencing | 1/1 | Complete | 2026-04-14 |

@@ -50,81 +50,98 @@ class ReviewService:
         override_map = {o.block_id: o for o in artifact.overrides}
         
         for page in document.pages:
+            # Handle blocks
             for block in page.blocks:
                 if block.block_id in override_map:
                     override = override_map[block.block_id]
-                    
-                    if override.role is not None and override.role != block.role:
-                        old_role = block.role
-                        block.role = override.role
-                        actions.append(
-                            RemediationAction(
-                                action_id=f"{page.page_number}-{block.block_id}-REV-ROLE",
-                                rule_id="MANUAL-REVIEW",
-                                page_number=page.page_number,
-                                block_id=block.block_id,
-                                source="human-review",
-                                description=f"Manual override: role changed from {old_role} to {override.role}",
-                                changed=True,
-                                before_value=old_role.value,
-                                after_value=override.role.value,
-                            )
-                        )
-                    
-                    if override.alt_text is not None and override.alt_text != block.alt_text:
-                        old_alt = block.alt_text
-                        block.alt_text = override.alt_text
-                        actions.append(
-                            RemediationAction(
-                                action_id=f"{page.page_number}-{block.block_id}-REV-ALT",
-                                rule_id="MANUAL-REVIEW",
-                                page_number=page.page_number,
-                                block_id=block.block_id,
-                                source="human-review",
-                                description="Manual override: alt-text updated.",
-                                changed=True,
-                                before_value=old_alt,
-                                after_value=override.alt_text,
-                            )
-                        )
-
-        for page in document.pages:
+                    self._apply_to_element(page.page_number, block, override, actions)
+            
+            # Handle forms
             for form in page.forms:
                 if form.field_id in override_map:
                     override = override_map[form.field_id]
-                    if hasattr(override, 'tooltip') and override.tooltip is not None and override.tooltip != form.tooltip:
-                        old_tooltip = form.tooltip
-                        form.tooltip = override.tooltip
-                        actions.append(
-                            RemediationAction(
-                                action_id=f"{page.page_number}-{form.field_id}-REV-TU",
-                                rule_id="MANUAL-REVIEW",
-                                page_number=page.page_number,
-                                block_id=form.field_id,
-                                source="human-review",
-                                description="Manual override: form tooltip updated.",
-                                changed=True,
-                                before_value=old_tooltip,
-                                after_value=form.tooltip,
-                            )
-                        )
-                        
-                    if override.is_artifact is not None:
-                        # If marked as artifact, we change role to artifact
-                        if override.is_artifact and block.role != CanonicalRole.artifact:
-                            old_role = block.role
-                            block.role = CanonicalRole.artifact
-                            actions.append(
-                                RemediationAction(
-                                    action_id=f"{page.page_number}-{block.block_id}-REV-ARTI",
-                                    rule_id="MANUAL-REVIEW",
-                                    page_number=page.page_number,
-                                    block_id=block.block_id,
-                                    source="human-review",
-                                    description="Manual override: block marked as artifact.",
-                                    changed=True,
-                                    before_value=old_role.value,
-                                    after_value=CanonicalRole.artifact.value,
-                                )
-                            )
+                    self._apply_to_element(page.page_number, form, override, actions)
+                    
         return actions
+
+    def _apply_to_element(
+        self, 
+        page_num: int, 
+        element: CanonicalBlock | CanonicalForm, 
+        override: ManualOverride, 
+        actions: list[RemediationAction]
+    ):
+        """Helper to apply overrides to a single canonical element (block or form)."""
+        element_id = getattr(element, 'block_id', getattr(element, 'field_id', 'unknown'))
+
+        # 1. Role override
+        if override.role is not None and override.role != element.role:
+            old_role = element.role
+            element.role = override.role
+            actions.append(
+                RemediationAction(
+                    action_id=f"{page_num}-{element_id}-REV-ROLE",
+                    rule_id="MANUAL-REVIEW",
+                    page_number=page_num,
+                    block_id=element_id,
+                    source="human-review",
+                    description=f"Manual override: role changed from {old_role} to {override.role}",
+                    changed=True,
+                    before_value=old_role.value,
+                    after_value=override.role.value,
+                )
+            )
+
+        # 2. Alt-text override (for blocks)
+        if hasattr(element, 'alt_text') and override.alt_text is not None and override.alt_text != element.alt_text:
+            old_alt = element.alt_text
+            element.alt_text = override.alt_text
+            actions.append(
+                RemediationAction(
+                    action_id=f"{page_num}-{element_id}-REV-ALT",
+                    rule_id="MANUAL-REVIEW",
+                    page_number=page_num,
+                    block_id=element_id,
+                    source="human-review",
+                    description="Manual override: alt-text updated.",
+                    changed=True,
+                    before_value=old_alt,
+                    after_value=override.alt_text,
+                )
+            )
+
+        # 3. Tooltip override (for forms)
+        if hasattr(element, 'tooltip') and override.tooltip is not None and override.tooltip != element.tooltip:
+            old_tooltip = element.tooltip
+            element.tooltip = override.tooltip
+            actions.append(
+                RemediationAction(
+                    action_id=f"{page_num}-{element_id}-REV-TU",
+                    rule_id="MANUAL-REVIEW",
+                    page_number=page_num,
+                    block_id=element_id,
+                    source="human-review",
+                    description="Manual override: form tooltip updated.",
+                    changed=True,
+                    before_value=old_tooltip,
+                    after_value=element.tooltip,
+                )
+            )
+
+        # 4. Artifact override
+        if override.is_artifact is True and element.role != CanonicalRole.artifact:
+            old_role = element.role
+            element.role = CanonicalRole.artifact
+            actions.append(
+                RemediationAction(
+                    action_id=f"{page_num}-{element_id}-REV-ARTI",
+                    rule_id="MANUAL-REVIEW",
+                    page_number=page_num,
+                    block_id=element_id,
+                    source="human-review",
+                    description="Manual override: element marked as artifact.",
+                    changed=True,
+                    before_value=old_role.value,
+                    after_value=CanonicalRole.artifact.value,
+                )
+            )

@@ -15,6 +15,8 @@ from pdf_accessibility.skills.remediation.artifacts import ArtifactClassificatio
 from pdf_accessibility.skills.remediation.ai_assist import AIAltTextSkill, RoleDisambiguationSkill
 from pdf_accessibility.skills.remediation.tables import TableRepairSkill
 from pdf_accessibility.skills.remediation.forms import FormRepairSkill
+from pdf_accessibility.skills.remediation.tables import TableRepairSkill
+from pdf_accessibility.skills.remediation.forms import FormRepairSkill, FormTabOrderSkill
 from pdf_accessibility.services.ai_assist import AIAssistService
 from pdf_accessibility.services.file_store import get_file_store
 from pdf_accessibility.services.review import ReviewService
@@ -32,6 +34,7 @@ _registry.register_remediation(MetadataRepairSkill())
 _registry.register_remediation(ArtifactClassificationSkill())
 _registry.register_remediation(TableRepairSkill())
 _registry.register_remediation(FormRepairSkill())
+_registry.register_remediation(FormTabOrderSkill())
 _registry.register_remediation(AIAltTextSkill(_ai_assist_service))
 _registry.register_remediation(RoleDisambiguationSkill(_ai_assist_service))
 

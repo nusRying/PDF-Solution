@@ -37,7 +37,9 @@ class FormRepairSkill(RemediationSkill):
             for form in page.forms:
                 if not form.tooltip:
                     old_tooltip = form.tooltip
-                    form.tooltip = form.name
+                    # Humanize field name (replace _ with space and title case)
+                    humanized_name = form.name.replace("_", " ").replace("-", " ").strip().title()
+                    form.tooltip = humanized_name
                     actions.append(RemediationAction(
                         action_id=f"{page.page_number}-{form.field_id}-REMED-FRM-001",
                         rule_id=self.skill_id,

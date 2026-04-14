@@ -4,21 +4,16 @@ from pdf_accessibility.services.file_store import get_file_store
 from pdf_accessibility.core.settings import get_settings
 
 def generate_render():
-    settings = get_settings()
-    store = get_file_store(settings)
-    
-    # Use the doc_id from our previous smoke test
-    doc_id = "1a77b93c5e274459b33121fb113b870a"
-    pdf_path = settings.originals_dir / f"{doc_id}.pdf"
-    
+    from pdf_accessibility.services.pdf_parser import parse_pdf
+    from pdf_accessibility.services.canonicalize import build_canonical_document
+
+    pdf_path = Path("smoke_test.pdf")
     if not pdf_path.exists():
         print(f"Error: Original PDF {pdf_path} not found.")
         return
 
-    canonical = store.get_canonical_artifact(doc_id)
-    if not canonical:
-        print(f"Error: Canonical artifact for {doc_id} not found.")
-        return
+    parser_artifact = parse_pdf(pdf_path.stem, pdf_path)
+    canonical = build_canonical_document(parser_artifact, None)
 
     doc = fitz.open(pdf_path)
     page = doc[0]

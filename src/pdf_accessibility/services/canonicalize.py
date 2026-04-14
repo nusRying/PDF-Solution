@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from pdf_accessibility.models.canonical import (
     CanonicalBlock,
     CanonicalDocument,
@@ -51,8 +53,14 @@ def build_canonical_document(
     table_service = TableDetectionService()
     form_service = FormDetectionService()
     
-    # Extract forms for the whole document
-    forms_by_page = form_service.extract_forms(parser_artifact.source_path)
+    # Extract forms for the whole document and group by page
+    all_forms = form_service.extract_forms(parser_artifact.source_path)
+    forms_by_page: dict[int, list] = {}
+    for f in all_forms:
+        p_num = f.page_number
+        if p_num not in forms_by_page:
+            forms_by_page[p_num] = []
+        forms_by_page[p_num].append(f)
     
     pages: list[CanonicalPage] = []
     total_blocks = 0
@@ -116,7 +124,7 @@ def build_canonical_document(
             used_ocr=used_ocr,
             needs_review=needs_review,
             blocks=blocks,
-            forms=forms_by_page.get(parser_page.page_number - 1, [])
+            forms=forms_by_page.get(parser_page.page_number, [])
         )
         
         # Detect tables using source PDF for high accuracy

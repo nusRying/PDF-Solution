@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pdf_accessibility.core.settings import Settings
 from pdf_accessibility.models.canonical import CanonicalDocument
-from pdf_accessibility.models.validation import ValidationFinding, ValidationLevel, ValidationStatus
+from pdf_accessibility.models.validation import ValidationFinding, ValidationSeverity
 from pdf_accessibility.skills.base import ValidationSkill, SkillCategory
 
 class FormFieldValidationSkill(ValidationSkill):
@@ -24,7 +24,7 @@ class FormFieldValidationSkill(ValidationSkill):
 
     @property
     def category(self) -> SkillCategory:
-        return SkillCategory.structural_validation
+        return SkillCategory.forms
 
     def validate(
         self,
@@ -37,24 +37,24 @@ class FormFieldValidationSkill(ValidationSkill):
             for form in page.forms:
                 if not form.name:
                     findings.append(ValidationFinding(
-                        finding_id=f"{page.page_number}-{form.field_id}-VALID-FRM-001-NAME",
                         rule_id=self.skill_id,
+                        severity=ValidationSeverity.error,
+                        message=f"Form field on page {page.page_number} is missing a name.",
                         page_number=page.page_number,
-                        level=ValidationLevel.error,
-                        status=ValidationStatus.fail,
-                        description=f"Form field on page {page.page_number} is missing a name.",
-                        location=f"Page {page.page_number}, Field ID {form.field_id}"
+                        block_id=form.field_id,
+                        bbox=form.bbox,
+                        source=self.name,
                     ))
                 
                 if not form.tooltip:
                     findings.append(ValidationFinding(
-                        finding_id=f"{page.page_number}-{form.field_id}-VALID-FRM-001-TOOLTIP",
                         rule_id=self.skill_id,
+                        severity=ValidationSeverity.error,
+                        message=f"Form field '{form.name}' is missing an accessible tooltip.",
                         page_number=page.page_number,
-                        level=ValidationLevel.error,
-                        status=ValidationStatus.fail,
-                        description=f"Form field '{form.name}' is missing an accessible tooltip.",
-                        location=f"Page {page.page_number}, Field {form.name}"
+                        block_id=form.field_id,
+                        bbox=form.bbox,
+                        source=self.name,
                     ))
         
         return findings
