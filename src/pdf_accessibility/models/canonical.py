@@ -82,6 +82,7 @@ class CanonicalTable(BaseModel):
 
 class CanonicalForm(BaseModel):
     field_id: str
+    page_number: int = 1
     name: str
     tooltip: str | None = None
     bbox: BoundingBox
