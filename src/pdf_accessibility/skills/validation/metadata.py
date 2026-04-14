@@ -2,62 +2,83 @@ from __future__ import annotations
 
 from pdf_accessibility.core.settings import Settings
 from pdf_accessibility.models.canonical import CanonicalDocument
-from pdf_accessibility.models.compliance import ComplianceStandard
-from pdf_accessibility.models.validation import StandardMapping, ValidationFinding, ValidationSeverity
+from pdf_accessibility.models.validation import ValidationFinding, ValidationSeverity
 from pdf_accessibility.skills.base import SkillCategory, ValidationSkill
 
 
-class DocumentTitleValidationSkill(ValidationSkill):
-    """
-    Checks if the document has a non-empty title in metadata.
-    """
-
+class DocumentLanguageSkill(ValidationSkill):
     @property
     def skill_id(self) -> str:
-        return "VALID-META-001"
+        return "VALID-WCAG-3.1.1"
 
     @property
     def name(self) -> str:
-        return "Document Title Presence"
+        return "Document Language"
 
     @property
     def version(self) -> str:
-        return "0.1.0"
+        return "1.0.0"
 
     @property
     def description(self) -> str:
-        return "Checks if the document has a non-empty title in metadata."
+        return "Verify that document language metadata is set."
 
     @property
     def category(self) -> SkillCategory:
         return SkillCategory.metadata
-
-    @property
-    def standards(self) -> list[ComplianceStandard]:
-        return [ComplianceStandard.wcag_2_1_aa]
 
     def validate(
         self,
         canonical_doc: CanonicalDocument,
         settings: Settings,
     ) -> list[ValidationFinding]:
-        findings: list[ValidationFinding] = []
-        
+        findings = []
+        if not canonical_doc.metadata.language or not canonical_doc.metadata.language.strip():
+            findings.append(
+                ValidationFinding(
+                    rule_id=self.skill_id,
+                    severity=ValidationSeverity.error,
+                    message="Document language metadata is not set",
+                    source=self.name,
+                )
+            )
+        return findings
+
+
+class PageTitleSkill(ValidationSkill):
+    @property
+    def skill_id(self) -> str:
+        return "VALID-WCAG-2.4.2"
+
+    @property
+    def name(self) -> str:
+        return "Document Title"
+
+    @property
+    def version(self) -> str:
+        return "1.0.0"
+
+    @property
+    def description(self) -> str:
+        return "Verify that document title metadata is set."
+
+    @property
+    def category(self) -> SkillCategory:
+        return SkillCategory.metadata
+
+    def validate(
+        self,
+        canonical_doc: CanonicalDocument,
+        settings: Settings,
+    ) -> list[ValidationFinding]:
+        findings = []
         if not canonical_doc.metadata.title or not canonical_doc.metadata.title.strip():
             findings.append(
                 ValidationFinding(
                     rule_id=self.skill_id,
                     severity=ValidationSeverity.error,
-                    message="Document title is missing in metadata.",
-                    source="validation",
-                    standards=[
-                        StandardMapping(
-                            standard=ComplianceStandard.wcag_2_1_aa,
-                            rule_id="2.4.2",
-                            criterion="Page Titled",
-                        )
-                    ],
+                    message="Document title metadata is not set",
+                    source=self.name,
                 )
             )
-            
         return findings
