@@ -31,6 +31,23 @@ class Settings(BaseSettings):
     ocr_low_confidence_threshold: float = 70.0
     ingest_worker_count: int = Field(default=1, ge=1)
     ingest_queue_poll_seconds: float = Field(default=0.5, ge=0.1, le=5.0)
+    redis_url: str = "redis://localhost:6379/0"
+    queue_backend: str = "threaded"  # "threaded" or "celery"
+
+    # AI Settings
+    ai_provider: str = "mock"  # "mock", "openai", "anthropic"
+    openai_api_key: str | None = None
+    openai_model: str = "gpt-4o"
+    anthropic_api_key: str | None = None
+    anthropic_model: str = "claude-3-5-sonnet-20240620"
+
+    # Storage Settings
+    storage_backend: str = "local"  # "local" or "s3"
+    s3_bucket: str = "pdf-accessibility"
+    s3_endpoint_url: str | None = None
+    s3_access_key_id: str | None = None
+    s3_secret_access_key: str | None = None
+    s3_region_name: str = "us-east-1"
 
     @field_validator("data_root", "tessdata_prefix", mode="before")
     @classmethod
@@ -66,6 +83,11 @@ class Settings(BaseSettings):
     @property
     def review_dir(self) -> Path:
         return self.data_root / "review"
+
+    @computed_field
+    @property
+    def review_artifacts_dir(self) -> Path:
+        return self.review_dir
 
     @computed_field
     @property

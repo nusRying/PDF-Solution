@@ -1,48 +1,57 @@
 from __future__ import annotations
 
-from pdf_accessibility.models.compliance import ComplianceProfile, ComplianceStandard
-from pdf_accessibility.models.documents import DocumentSourceType, ParserArtifact
+from pdf_accessibility.core.settings import Settings
+from pdf_accessibility.models.canonical import CanonicalDocument
+from pdf_accessibility.models.compliance import ComplianceProfile, get_profile_definition
+from pdf_accessibility.models.documents import ParserArtifact
 from pdf_accessibility.models.ocr import OCRArtifact
 from pdf_accessibility.models.preflight import PreflightArtifact, ProcessingLane
 from pdf_accessibility.models.validation import (
-    StandardMapping,
     ValidationArtifact,
     ValidationFinding,
     ValidationSeverity,
     ValidationStatus,
 )
+from pdf_accessibility.skills.registry import get_registry
+from pdf_accessibility.skills.validation.image_only import ImageOnlyValidationSkill
+from pdf_accessibility.skills.validation.layout import HeadingStructureSkill, ReadingOrderJumpSkill
+from pdf_accessibility.skills.validation.missing_blocks import MissingBlocksValidationSkill
+from pdf_accessibility.skills.validation.ocr_usage import OCRUsageValidationSkill
+from pdf_accessibility.skills.validation.headings import HeadingHierarchyValidationSkill
+from pdf_accessibility.skills.validation.metadata import DocumentTitleValidationSkill
+from pdf_accessibility.skills.validation.figures import FigureAltTextValidationSkill
+
+# Initialize Registry
+_registry = get_registry()
+_registry.register_validation(ImageOnlyValidationSkill())
+_registry.register_validation(MissingBlocksValidationSkill())
+_registry.register_validation(OCRUsageValidationSkill())
+_registry.register_validation(ReadingOrderJumpSkill())
+_registry.register_validation(HeadingStructureSkill())
+_registry.register_validation(HeadingHierarchyValidationSkill())
+_registry.register_validation(DocumentTitleValidationSkill())
+_registry.register_validation(FigureAltTextValidationSkill())
 
 
-def run_initial_validation(
-    parser_artifact: ParserArtifact,
-    ocr_artifact: OCRArtifact | None,
-    canonical_document: CanonicalDocument,
+def run_validation_pipeline(
+    document: CanonicalDocument,
+    settings: Settings,
+    profile: ComplianceProfile = ComplianceProfile.profile_b,
     preflight_artifact: PreflightArtifact | None = None,
     manual_review_required: bool = False,
-    profile: ComplianceProfile = ComplianceProfile.profile_b,
 ) -> ValidationArtifact:
     findings: list[ValidationFinding] = []
-    ocr_page_lookup = {
-        page.page_number: page for page in (ocr_artifact.pages if ocr_artifact else [])
-    }
+    
+    # Run dynamic skills from profile
+    profile_def = get_profile_definition(profile)
+    registry = get_registry()
+    
+    for skill_id in profile_def.validation_skill_ids:
+        skill = registry.get_validation(skill_id)
+        if skill:
+            findings.extend(skill.validate(document, settings))
 
-    if parser_artifact.source_type in {DocumentSourceType.scanned, DocumentSourceType.image_only}:
-        findings.append(
-            ValidationFinding(
-                rule_id="DOC-001",
-                severity=ValidationSeverity.info,
-                message="Document is image-based and depends on OCR-derived text.",
-                source="classifier",
-                standards=[
-                    StandardMapping(
-                        standard=ComplianceStandard.pdf_ua_1,
-                        rule_id="Matterhorn 01",
-                        criterion="Real content must be tagged.",
-                    )
-                ],
-            )
-        )
-
+    # Add pipeline-specific ambient findings
     if preflight_artifact is not None:
         findings.append(
             ValidationFinding(
@@ -62,48 +71,6 @@ def run_initial_validation(
                 )
             )
 
-    for page in canonical_document.pages:
-        if page.block_count == 0:
-            findings.append(
-                ValidationFinding(
-                    rule_id="CANON-001",
-                    severity=ValidationSeverity.error,
-                    message="Page has no canonical text blocks.",
-                    page_number=page.page_number,
-                    source="canonical",
-                    standards=[
-                        StandardMapping(
-                            standard=ComplianceStandard.wcag_2_1_aa,
-                            rule_id="1.1.1",
-                            criterion="Non-text Content",
-                        )
-                    ],
-                )
-            )
-
-        if page.used_ocr:
-            findings.append(
-                ValidationFinding(
-                    rule_id="OCR-002",
-                    severity=ValidationSeverity.warning,
-                    message="Page content was derived from OCR and should be reviewed.",
-                    page_number=page.page_number,
-                    source="ocr",
-                )
-            )
-
-        ocr_page = ocr_page_lookup.get(page.page_number)
-        if ocr_page and ocr_page.error:
-            findings.append(
-                ValidationFinding(
-                    rule_id="OCR-001",
-                    severity=ValidationSeverity.error,
-                    message=ocr_page.error,
-                    page_number=page.page_number,
-                    source="ocr",
-                )
-            )
-
     error_count = sum(1 for finding in findings if finding.severity == ValidationSeverity.error)
     warning_count = sum(1 for finding in findings if finding.severity == ValidationSeverity.warning)
 
@@ -115,11 +82,30 @@ def run_initial_validation(
         status = ValidationStatus.passed
 
     return ValidationArtifact(
-        document_id=canonical_document.document_id,
+        document_id=document.document_id,
         profile=profile,
         status=status,
         finding_count=len(findings),
         error_count=error_count,
         warning_count=warning_count,
         findings=findings,
+    )
+
+
+def run_initial_validation(
+    parser_artifact: ParserArtifact,
+    ocr_artifact: OCRArtifact | None,
+    canonical_document: CanonicalDocument,
+    preflight_artifact: PreflightArtifact | None = None,
+    manual_review_required: bool = False,
+    profile: ComplianceProfile = ComplianceProfile.profile_b,
+) -> ValidationArtifact:
+    """Legacy wrapper for run_validation_pipeline."""
+    settings = Settings()
+    return run_validation_pipeline(
+        document=canonical_document,
+        settings=settings,
+        profile=profile,
+        preflight_artifact=preflight_artifact,
+        manual_review_required=manual_review_required,
     )

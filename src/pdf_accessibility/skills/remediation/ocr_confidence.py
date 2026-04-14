@@ -17,11 +17,11 @@ class OCRConfidenceSkill(RemediationSkill):
 
     @property
     def version(self) -> str:
-        return "1.0.0"
+        return "0.1.0"
 
     @property
     def description(self) -> str:
-        return "Flags OCR blocks with confidence levels below the threshold for manual review."
+        return "Flags OCR blocks with confidence below the configured threshold for manual review."
 
     @property
     def category(self) -> SkillCategory:

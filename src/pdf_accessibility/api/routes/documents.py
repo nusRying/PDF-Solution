@@ -5,9 +5,9 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Uplo
 from pdf_accessibility.core.settings import Settings, get_settings
 from pdf_accessibility.models.compliance import ComplianceProfile
 from pdf_accessibility.models.jobs import DocumentIngestResponse
-from pdf_accessibility.services.file_store import FileStore
+from pdf_accessibility.services.file_store import get_file_store
 from pdf_accessibility.services.ingestion import create_ingest_job
-from pdf_accessibility.services.job_queue import JobQueueService
+from pdf_accessibility.services.job_queue import BaseJobQueue
 
 router = APIRouter(tags=["documents"])
 
@@ -38,7 +38,7 @@ async def upload_document(
         ) from exc
 
     job_queue = getattr(request.app.state, "job_queue", None)
-    if not isinstance(job_queue, JobQueueService):
+    if not isinstance(job_queue, BaseJobQueue):
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Ingestion queue is unavailable.",
@@ -53,7 +53,7 @@ def get_parser_output(
     document_id: str,
     settings: Settings = Depends(get_settings),
 ):
-    store = FileStore(settings)
+    store = get_file_store(settings)
     artifact = store.get_parser_artifact(document_id)
     if artifact is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document artifact not found.")
@@ -65,7 +65,7 @@ def get_ocr_output(
     document_id: str,
     settings: Settings = Depends(get_settings),
 ):
-    store = FileStore(settings)
+    store = get_file_store(settings)
     artifact = store.get_ocr_artifact(document_id)
     if artifact is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="OCR artifact not found.")
@@ -77,7 +77,7 @@ def get_preflight_output(
     document_id: str,
     settings: Settings = Depends(get_settings),
 ):
-    store = FileStore(settings)
+    store = get_file_store(settings)
     artifact = store.get_preflight_artifact(document_id)
     if artifact is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Preflight artifact not found.")
@@ -89,7 +89,7 @@ def get_canonical_output(
     document_id: str,
     settings: Settings = Depends(get_settings),
 ):
-    store = FileStore(settings)
+    store = get_file_store(settings)
     artifact = store.get_canonical_artifact(document_id)
     if artifact is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Canonical artifact not found.")
@@ -101,7 +101,7 @@ def get_remediated_canonical_output(
     document_id: str,
     settings: Settings = Depends(get_settings),
 ):
-    store = FileStore(settings)
+    store = get_file_store(settings)
     artifact = store.get_remediated_canonical_artifact(document_id)
     if artifact is None:
         raise HTTPException(
@@ -116,7 +116,7 @@ def get_remediation_output(
     document_id: str,
     settings: Settings = Depends(get_settings),
 ):
-    store = FileStore(settings)
+    store = get_file_store(settings)
     artifact = store.get_remediation_artifact(document_id)
     if artifact is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Remediation artifact not found.")
@@ -128,7 +128,7 @@ def get_validation_output(
     document_id: str,
     settings: Settings = Depends(get_settings),
 ):
-    store = FileStore(settings)
+    store = get_file_store(settings)
     artifact = store.get_validation_artifact(document_id)
     if artifact is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Validation artifact not found.")

@@ -56,5 +56,34 @@ def status(job_id: str, api_url: str):
         click.echo(f"Failed to fetch job status: {response.text}", err=True)
 
 
+@cli.command()
+@click.argument("document_id")
+@click.option("--format", "report_format", default="json", type=click.Choice(["json", "earl"]), help="Report format.")
+@click.option("--api-url", default="http://127.0.0.1:8000", help="API base URL.")
+def report(document_id: str, report_format: str, api_url: str):
+    """Fetch the validation report for a document."""
+    url = f"{api_url}/api/v1/documents/{document_id}/validation-output"
+    response = requests.get(url)
+    
+    if response.status_code == 200:
+        artifact = response.json()
+        if report_format == "earl":
+            # In a real scenario, the API might handle this conversion
+            # For now, we'll demonstrate client-side conversion or a separate endpoint
+            click.echo("Generating EARL report locally...")
+            from pdf_accessibility.models.validation import ValidationArtifact
+            from pdf_accessibility.services.reporting import EARLReportGenerator
+            
+            val_artifact = ValidationArtifact.model_validate(artifact)
+            generator = EARLReportGenerator()
+            earl_json = generator.generate_report(val_artifact)
+            click.echo(earl_json)
+        else:
+            import json
+            click.echo(json.dumps(artifact, indent=2))
+    else:
+        click.echo(f"Failed to fetch report: {response.text}", err=True)
+
+
 if __name__ == "__main__":
     cli()

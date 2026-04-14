@@ -1,10 +1,23 @@
 from __future__ import annotations
 
 from datetime import datetime
+from enum import Enum
 
 from pydantic import BaseModel, Field
 
 from pdf_accessibility.models.documents import utc_now
+
+
+class RemediationCategory(str, Enum):
+    tagging = "tagging"
+    headings = "headings"
+    lists = "lists"
+    tables = "tables"
+    figures = "figures"
+    metadata = "metadata"
+    ocr = "ocr"
+    reading_order = "reading-order"
+    structural_fix = "structural-fix"
 
 
 class RemediationAction(BaseModel):

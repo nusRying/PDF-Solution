@@ -4,6 +4,7 @@ from collections import Counter
 from pathlib import Path
 
 import fitz
+import pikepdf
 from pypdf import PdfReader
 
 from pdf_accessibility.models.documents import (
@@ -39,6 +40,48 @@ def _classify_source_type(
     if text_page_count == 0:
         return DocumentSourceType.image_only
     return DocumentSourceType.digital
+
+
+def _extract_low_level_metadata(pdf_path: Path) -> dict[str, bool]:
+    """Extract accessibility-related metadata flags using pikepdf."""
+    is_tagged = False
+    has_struct_tree = False
+    is_pdf_ua_identifier_present = False
+
+    try:
+        with pikepdf.open(pdf_path) as pdf:
+            # Check for Tagged PDF flag
+            if "/MarkInfo" in pdf.Root:
+                mark_info = pdf.Root.MarkInfo
+                if "/Marked" in mark_info:
+                    is_tagged = bool(mark_info.Marked)
+
+            # Check for Structure Tree Root
+            if "/StructTreeRoot" in pdf.Root:
+                has_struct_tree = True
+
+            # Check XMP for PDF/UA-1 identifier
+            try:
+                xmp = pdf.open_metadata()
+                # Check for PDF/UA identification in XMP
+                # Usually: <pdfuaid:part>1</pdfuaid:part>
+                if "pdfuaid:part" in str(xmp):
+                    is_pdf_ua_identifier_present = True
+                # Alternative check for the schema URI
+                elif "http://www.aiim.org/pdfua/ns/id/" in str(xmp):
+                    is_pdf_ua_identifier_present = True
+            except Exception:
+                pass
+
+    except Exception:
+        # If pikepdf fails to open or parse, we keep defaults
+        pass
+
+    return {
+        "is_tagged": is_tagged,
+        "has_struct_tree": has_struct_tree,
+        "is_pdf_ua_identifier_present": is_pdf_ua_identifier_present,
+    }
 
 
 def parse_pdf(document_id: str, pdf_path: Path) -> ParserArtifact:
@@ -133,6 +176,8 @@ def parse_pdf(document_id: str, pdf_path: Path) -> ParserArtifact:
             image_page_count=image_page_count,
         )
 
+        acc_metadata = _extract_low_level_metadata(pdf_path)
+
         artifact = ParserArtifact(
             document_id=document_id,
             source_path=str(pdf_path),
@@ -149,6 +194,9 @@ def parse_pdf(document_id: str, pdf_path: Path) -> ParserArtifact:
                 producer=_clean_metadata_value(metadata.get("/Producer")),
                 creation_date=_clean_metadata_value(metadata.get("/CreationDate")),
                 modification_date=_clean_metadata_value(metadata.get("/ModDate")),
+                is_tagged=acc_metadata["is_tagged"],
+                has_struct_tree=acc_metadata["has_struct_tree"],
+                is_pdf_ua_identifier_present=acc_metadata["is_pdf_ua_identifier_present"],
             ),
             pages=pages,
         )

@@ -1,0 +1,25 @@
+<svg width="800" height="450" viewBox="0 0 800 450" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="450" fill="#F9FAFB"/>
+  <rect x="0" y="0" width="800" height="64" fill="white" stroke="#E5E7EB"/>
+  <text x="32" y="40" font-family="sans-serif" font-size="18" font-weight="bold" fill="#111827">PDF Accessibility Platform</text>
+  <rect x="32" y="96" width="240" height="320" rx="12" fill="white" stroke="#E5E7EB"/>
+  <text x="48" y="128" font-family="sans-serif" font-size="16" font-weight="600" fill="#111827">Ingest Document</text>
+  <rect x="48" y="150" width="208" height="40" rx="6" fill="#F3F4F6" stroke="#D1D5DB"/>
+  <text x="58" y="175" font-family="sans-serif" font-size="12" fill="#6B7280">select_file.pdf</text>
+  <rect x="48" y="210" width="208" height="40" rx="6" fill="white" stroke="#D1D5DB"/>
+  <text x="58" y="235" font-family="sans-serif" font-size="12" fill="#111827">Profile C: PDF/UA</text>
+  <rect x="48" y="270" width="208" height="40" rx="6" fill="#2563EB"/>
+  <text x="100" y="295" font-family="sans-serif" font-size="14" font-weight="600" fill="white">Start Pipeline</text>
+  <rect x="304" y="96" width="464" height="320" rx="12" fill="white" stroke="#E5E7EB"/>
+  <text x="320" y="128" font-family="sans-serif" font-size="16" font-weight="600" fill="#111827">Active Jobs</text>
+  <rect x="320" y="144" width="432" height="32" fill="#F9FAFB"/>
+  <text x="330" y="165" font-family="sans-serif" font-size="12" font-weight="600" fill="#374151">Job ID</text>
+  <text x="450" y="165" font-family="sans-serif" font-size="12" font-weight="600" fill="#374151">Status</text>
+  <text x="550" y="165" font-family="sans-serif" font-size="12" font-weight="600" fill="#374151">Stage</text>
+  <line x1="320" y1="184" x2="752" y2="184" stroke="#F3F4F6"/>
+  <text x="330" y="210" font-family="monospace" font-size="12" fill="#4B5563">a7f2d1e...</text>
+  <rect x="450" y="195" width="70" height="20" rx="10" fill="#DCFCE7"/>
+  <text x="462" y="209" font-family="sans-serif" font-size="10" font-weight="600" fill="#166534">succeeded</text>
+  <text x="550" y="210" font-family="sans-serif" font-size="12" fill="#4B5563">completed</text>
+  <text x="680" y="210" font-family="sans-serif" font-size="12" font-weight="600" fill="#2563EB">Review</text>
+</svg>

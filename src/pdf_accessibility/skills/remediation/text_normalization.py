@@ -19,11 +19,11 @@ class TextNormalizationSkill(RemediationSkill):
 
     @property
     def version(self) -> str:
-        return "1.0.0"
+        return "0.1.0"
 
     @property
     def description(self) -> str:
-        return "Normalizes text whitespace and control characters across the document."
+        return "Normalizes block text by removing control characters and collapsing whitespace."
 
     @property
     def category(self) -> SkillCategory:

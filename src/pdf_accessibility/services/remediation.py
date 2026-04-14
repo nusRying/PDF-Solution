@@ -1,17 +1,39 @@
 from __future__ import annotations
 
 from pdf_accessibility.core.settings import Settings
+from pdf_accessibility.core.settings import get_settings
 from pdf_accessibility.models.compliance import ComplianceProfile, get_profile_definition
 from pdf_accessibility.models.canonical import CanonicalDocument
 from pdf_accessibility.models.remediation import RemediationAction, RemediationArtifact
 from pdf_accessibility.skills.registry import get_registry
 from pdf_accessibility.skills.remediation.text_normalization import TextNormalizationSkill
 from pdf_accessibility.skills.remediation.ocr_confidence import OCRConfidenceSkill
+from pdf_accessibility.skills.remediation.headings import HeadingNormalizationSkill
+from pdf_accessibility.skills.remediation.lists import ListRepairSkill
+from pdf_accessibility.skills.remediation.metadata import MetadataRepairSkill
+from pdf_accessibility.skills.remediation.artifacts import ArtifactClassificationSkill
+from pdf_accessibility.skills.remediation.ai_assist import AIAltTextSkill, RoleDisambiguationSkill
+from pdf_accessibility.skills.remediation.tables import TableRepairSkill
+from pdf_accessibility.skills.remediation.forms import FormRepairSkill
+from pdf_accessibility.services.ai_assist import AIAssistService
+from pdf_accessibility.services.file_store import get_file_store
+from pdf_accessibility.services.review import ReviewService
 
-# Initialize Registry (usually done in a bootstrap phase)
+# Initialize Registry
 _registry = get_registry()
+_settings = get_settings()
+_ai_assist_service = AIAssistService(_settings)
+
 _registry.register_remediation(TextNormalizationSkill())
 _registry.register_remediation(OCRConfidenceSkill())
+_registry.register_remediation(HeadingNormalizationSkill())
+_registry.register_remediation(ListRepairSkill())
+_registry.register_remediation(MetadataRepairSkill())
+_registry.register_remediation(ArtifactClassificationSkill())
+_registry.register_remediation(TableRepairSkill())
+_registry.register_remediation(FormRepairSkill())
+_registry.register_remediation(AIAltTextSkill(_ai_assist_service))
+_registry.register_remediation(RoleDisambiguationSkill(_ai_assist_service))
 
 
 def run_remediation_pipeline(
@@ -22,6 +44,7 @@ def run_remediation_pipeline(
     remediated = document.model_copy(deep=True)
     all_actions: list[RemediationAction] = []
     
+    # 1. Apply Dynamic Skills from Registry
     profile_def = get_profile_definition(profile)
     skill_ids = profile_def.remediation_skill_ids
     
@@ -30,8 +53,16 @@ def run_remediation_pipeline(
     for skill_id in skill_ids:
         skill = registry.get_remediation(skill_id)
         if skill:
-            actions = skill.run(remediated, settings)
+            actions = skill.remediate(remediated, settings)
             all_actions.extend(actions)
+
+    # 2. Apply Manual Overrides (Human-in-the-loop)
+    store = get_file_store(settings)
+    review_service = ReviewService(store)
+    review_artifact = store.get_review_artifact(remediated.document_id)
+    if review_artifact:
+        manual_actions = review_service.apply_overrides(remediated, review_artifact)
+        all_actions.extend(manual_actions)
 
     # Recalculate totals
     for page in remediated.pages:

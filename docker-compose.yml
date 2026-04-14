@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - STORAGE_BACKEND=local
+      - DATA_ROOT=/app/data
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      - redis
+
+  worker:
+    build: .
+    command: ["celery", "-A", "pdf_accessibility.core.celery", "worker", "--loglevel=info"]
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - STORAGE_BACKEND=local
+      - DATA_ROOT=/app/data
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      - redis
+
+  ui:
+    build: ./ui
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+    depends_on:
+      - api
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=admin
+      - MINIO_ROOT_PASSWORD=password
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+
+volumes:
+  minio_data:

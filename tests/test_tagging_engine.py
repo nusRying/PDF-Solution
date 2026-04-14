@@ -154,3 +154,56 @@ def test_build_struct_tree_list_nesting():
     assert len(list_elem.K) == 2
     assert list_elem.K[0].S == "/LI"
     assert list_elem.K[1].S == "/LI"
+
+def test_mark_content():
+    import pikepdf
+    from pdf_accessibility.models.canonical import CanonicalDocument, CanonicalPage, CanonicalBlock, CanonicalMetadata
+    from pdf_accessibility.models.documents import BoundingBox, DocumentSourceType
+
+    pdf = pikepdf.new()
+    page = pdf.add_blank_page()
+    # Add some dummy content to the page
+    # In a real PDF this would be complex, but for testing we can use a simple stream
+    page.Contents = pdf.make_stream(b"BT /F1 12 Tf 0 0 Td (Hello World) Tj ET")
+
+    doc = CanonicalDocument(
+        document_id="test_mark_id",
+        source_type=DocumentSourceType.digital,
+        page_count=1,
+        total_block_count=1,
+        total_text_char_count=11,
+        ocr_page_count=0,
+        metadata=CanonicalMetadata(),
+        pages=[
+            CanonicalPage(
+                page_number=1,
+                width=612,
+                height=792,
+                rotation=0,
+                block_count=1,
+                text_char_count=11,
+                has_native_text=True,
+                used_ocr=False,
+                needs_review=False,
+                blocks=[
+                    CanonicalBlock(
+                        block_id="b1",
+                        page_number=1,
+                        source="native",
+                        bbox=BoundingBox(x0=0, y0=0, x1=100, y1=100),
+                        text="Hello World",
+                        char_count=11,
+                        role=CanonicalRole.text
+                    )
+                ]
+            )
+        ]
+    )
+
+    engine = TaggingEngine()
+    engine.mark_content_on_page(pdf, page, doc.pages[0])
+    content = bytes(page.Contents)
+    assert b"BDC" in content
+    assert b"EMC" in content
+    assert b"/MCID 0" in content
+    assert b"/P" in content

@@ -13,14 +13,15 @@ from pdf_accessibility.models.documents import DocumentRecord, utc_now
 from pdf_accessibility.models.jobs import JobRecord, JobStage, JobStageEvent, JobStatus, JobSummary
 from pdf_accessibility.models.ocr import OCRArtifact
 from pdf_accessibility.services.canonicalize import build_canonical_document
-from pdf_accessibility.services.file_store import FileStore
+from pdf_accessibility.services.file_store import get_file_store, BaseFileStore
 from pdf_accessibility.services.lane_policy import OCRMode, resolve_lane_execution_policy
 from pdf_accessibility.services.ocr import run_tesseract_ocr
 from pdf_accessibility.services.pdf_parser import parse_pdf
+from pdf_accessibility.services.pdf_writer import PdfWriterService
 from pdf_accessibility.services.preflight import classify_preflight
 from pdf_accessibility.services.remediation import run_remediation_pipeline
 from pdf_accessibility.services.telemetry import record_job_telemetry
-from pdf_accessibility.services.validation import run_initial_validation
+from pdf_accessibility.services.validation import run_validation_pipeline
 
 
 async def _save_upload_to_path(upload: UploadFile, destination: Path) -> tuple[int, str]:
@@ -49,7 +50,7 @@ def _normalize_filename(filename: str | None) -> str:
 
 def _advance_job_stage(
     job: JobRecord,
-    store: FileStore,
+    store: BaseFileStore,
     stage: JobStage,
     note: str | None = None,
 ) -> None:
@@ -64,15 +65,17 @@ async def create_ingest_job(
     settings: Settings,
     profile: ComplianceProfile = ComplianceProfile.profile_b,
 ) -> tuple[DocumentRecord, JobRecord]:
-    store = FileStore(settings)
+    store = get_file_store(settings)
     document_id = uuid4().hex
     job_id = uuid4().hex
 
     original_filename = _normalize_filename(upload.filename)
     suffix = Path(original_filename).suffix.lower() or ".pdf"
-    stored_pdf_path = store.original_pdf_path(document_id, suffix=suffix)
+    content = await upload.read()
+    stored_pdf_path = store.save_original_pdf(document_id, content, suffix=suffix)
 
-    file_size_bytes, sha256 = await _save_upload_to_path(upload, stored_pdf_path)
+    file_size_bytes = len(content)
+    sha256 = hashlib.sha256(content).hexdigest()
 
     document = DocumentRecord(
         document_id=document_id,
@@ -113,7 +116,7 @@ def process_ingest_job(
     job_id: str,
     settings: Settings,
 ) -> JobRecord:
-    store = FileStore(settings)
+    store = get_file_store(settings)
     job = store.get_job_record(job_id)
     if job is None:
         raise FileNotFoundError(f"Job {job_id} not found.")
@@ -128,7 +131,7 @@ def process_ingest_job(
         return failed_job
     document_id = job.document_id
 
-    stored_pdf_path = settings.data_root / document.original_path
+    stored_pdf_path = store.original_pdf_path(document_id, suffix=Path(document.original_filename).suffix)
     if not stored_pdf_path.exists():
         failed_job = _fail_job(job, store, f"Original PDF not found at {stored_pdf_path}.")
         record_job_telemetry(store=store, job=failed_job)
@@ -236,13 +239,24 @@ def process_ingest_job(
             note=f"Applied {remediation_artifact.action_count} remediation actions.",
         )
 
-        validation_artifact = run_initial_validation(
-            parser_artifact=parser_artifact,
-            ocr_artifact=ocr_artifact,
-            canonical_document=remediated_canonical_artifact,
+        # Write remediated PDF
+        writer = PdfWriterService(settings)
+        output_pdf_path = store.output_pdf_path(document_id)
+        writer.write_remediated_pdf(
+            original_pdf_path=stored_pdf_path,
+            output_pdf_path=output_pdf_path,
+            remediated_doc=remediated_canonical_artifact,
+        )
+        # Upload output PDF if using S3 (or ensure it's in the store)
+        store.save_output_pdf(document_id, output_pdf_path.read_bytes())
+        job.artifacts["output_pdf"] = store.relative_path(output_pdf_path)
+
+        validation_artifact = run_validation_pipeline(
+            document=remediated_canonical_artifact,
+            settings=settings,
+            profile=job.compliance_profile,
             preflight_artifact=preflight_artifact,
             manual_review_required=lane_policy.manual_review_required,
-            profile=job.compliance_profile,
         )
         _advance_job_stage(
             job,

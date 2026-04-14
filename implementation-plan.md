@@ -84,13 +84,13 @@ Do not start with the UI. Do not start with the LLM. The hard part is the canoni
 
 ### 6.1 Control plane
 
-- `API service`: REST endpoints for upload, job status, report download, and admin operations
-- `CLI`: batch submit, status polling, connector sync, and report export
-- `connector services`: SharePoint, S3, Google Drive, Box, or customer-specific sources
-- `job orchestrator`: queues, retries, priorities, fan-out/fan-in
-- `metadata DB`: Postgres for jobs, findings, review decisions, configs, tenants
-- `object storage`: originals, intermediate artifacts, rendered previews, outputs, reports
-- `cache/queue`: Redis or RabbitMQ
+- `API service`: REST endpoints (FastAPI) for upload, job status, report download, and admin operations.
+- `CLI`: batch submit, status polling, connector sync, and report export.
+- `connector services`: Ingestion connectors (SharePoint, S3, Google Drive, Box).
+- `job orchestrator`: Production-ready queue (Celery/Redis or Postgres-backed) for reliable job distribution.
+- `metadata DB`: Postgres for jobs, findings, review decisions, configs, tenants.
+- `object storage`: Internal cloud storage (S3/Azure Blob) for originals, intermediate artifacts, outputs, and reports.
+- `cache/queue`: Redis for Celery and caching.
 
 ### 6.2 Worker plane
 
@@ -133,8 +133,8 @@ Use a typed boundary for the most fragile contracts:
 
 - FastAPI for REST API
 - Postgres for metadata and review state
-- Redis for queueing and caching, or RabbitMQ if delivery guarantees need stronger broker semantics
-- S3-compatible object storage for binaries and artifacts
+- Celery with Redis for robust asynchronous job queueing
+- S3-compatible or Azure Blob object storage for binaries and artifacts
 
 ### 7.3 PDF stack
 
@@ -142,7 +142,7 @@ This is where we should be conservative.
 
 Recommendation:
 
-- use open-source tools for inspection and enrichment
+- use open-source tools for inspection and enrichment (e.g. pikepdf for metadata/XMP)
 - use a commercial-grade PDF SDK for structural repair and standards-grade output writing
 
 Why:
@@ -165,7 +165,7 @@ We should run a bakeoff before committing to the writer/repair engine.
 
 Provide a unified adapter interface:
 
-- local: Tesseract
+- local: Tesseract (integrated in Docker)
 - cloud: AWS Textract, Google Document AI, Azure AI Document Intelligence
 
 The adapter contract should return:
@@ -237,7 +237,7 @@ Input channels:
 
 - REST API upload
 - CLI batch submit
-- cloud connector pull
+- cloud connector pull (S3, SharePoint, GDrive)
 - optional watched-folder drop for enterprise environments
 
 At ingest, compute:
@@ -438,6 +438,7 @@ Required controls:
 - tenant isolation
 - configurable retention and purge
 - PII-sensitive audit handling
+- **Final Hardening**: API key authentication, CORS configuration, and rate limiting for the REST API.
 - secrets management
 - optional on-prem or VPC deployment mode
 - model routing policy: local-only, approved-cloud-only, or disabled
@@ -452,13 +453,13 @@ For public-sector or regulated buyers, LLM usage must be able to run in:
 
 ### 14.1 Containers
 
-- Docker images for API, workers, UI, and scheduled connector jobs
+- Docker images for API (FastAPI), workers (including Tesseract and Pikepdf dependencies), UI, and scheduled connector jobs.
 
 ### 14.2 Orchestration
 
 - Kubernetes for production
 - Helm charts for deployment
-- autoscaling on queue depth, OCR saturation, and CPU/memory
+- autoscaling on queue depth (via Celery/Redis metrics), OCR saturation, and CPU/memory
 
 ### 14.3 Observability
 
@@ -502,7 +503,7 @@ For each corpus item, store:
 - fixture-based tests for remediation passes
 - contract tests for OCR/LLM adapters
 - document-level regression tests
-- load tests and throughput tests
+- **Comprehensive Benchmarking**: Load tests and throughput tests to verify the >= 30 pages/sec target and latency profiles.
 - deterministic replay tests for previous failures
 
 ### 15.3 Human evaluation
@@ -534,10 +535,10 @@ Deliver:
 
 - API skeleton with Compliance Profile support
 - CLI skeleton
-- job orchestration with profile-based routing
+- job orchestration with profile-based routing (initial in-memory queue)
 - **Skill Registry Core**: Implementation of the registry infrastructure for remediation and validation rules.
 - **Profile-Rule Mapping**: Logic to activate skills based on the `ComplianceProfile`.
-- storage model
+- storage model (local filesystem for dev)
 - auth and tenancy baseline
 - observability baseline
 
@@ -552,7 +553,7 @@ Deliver:
 
 - PDF parser
 - document classifier
-- OCR adapter layer
+- OCR adapter layer (Tesseract integration)
 - canonical document model
 - rendered page previews
 - **Rule Migration**: Transition of first-set procedural rules (tagging, metadata) into registered "skills".
@@ -571,7 +572,7 @@ Deliver:
 - metadata repair
 - list/table/heading repair where confidence is high
 - artifact classification baseline
-- first PDF writer/export path
+- first PDF writer/export path (Pikepdf-backed)
 
 Exit criteria:
 
@@ -604,19 +605,21 @@ Exit criteria:
 
 - ambiguous documents can be completed through assisted review without leaving the platform
 
-### Milestone 6: Performance and hardening
+### Milestone 6: Operations & Hardening
 
 Deliver:
 
-- worker scaling
-- benchmark runs
-- retry/error handling hardening
-- deployment charts
-- runbooks and docs
+- **Dockerization**: Production Docker images (FastAPI + Tesseract + Pikepdf).
+- **Production Queue**: Celery/Redis or Postgres-backed job queue implementation.
+- **Cloud Storage**: S3/Azure Blob connectors for internal document and artifact storage.
+- **Performance Benchmarking**: Comprehensive throughput and latency runs on benchmark corpus.
+- **Security Hardening**: API keys, CORS, and rate limiting implementation.
+- **Final Deployment**: Helm charts and production runbooks.
 
 Exit criteria:
 
-- contractual throughput and quality targets met on the agreed benchmark corpus
+- Contractual throughput (>= 30 pages/sec) and quality targets (95% auto-fix, 98% PAC pass) met on the agreed benchmark corpus.
+- Platform is fully deployable, secure, and ready for production operations.
 
 ## 17. Success Criteria for Skill-Driven Architecture
 

@@ -16,6 +16,7 @@ def _build_pdf_bytes(text: str) -> bytes:
     document = fitz.open()
     page = document.new_page()
     page.insert_text((72, 72), text)
+    document.set_metadata({"title": "Test Document"})
     pdf_bytes = document.tobytes()
     document.close()
     return pdf_bytes
@@ -31,6 +32,7 @@ def _build_image_only_pdf_bytes(text: str) -> bytes:
     scanned = fitz.open()
     page = scanned.new_page(width=595, height=842)
     page.insert_image(page.rect, stream=pixmap.tobytes("png"))
+    scanned.set_metadata({"title": "Scanned Test Document"})
     pdf_bytes = scanned.tobytes()
     scanned.close()
     return pdf_bytes
@@ -248,8 +250,7 @@ def test_upload_image_only_pdf_runs_ocr_and_builds_canonical_output(client: Test
     assert validation_response.status_code == 200
     validation_payload = validation_response.json()
     assert validation_payload["status"] == "needs-review"
-    assert any(finding["rule_id"] == "OCR-002" for finding in validation_payload["findings"])
-
+    assert any(finding["rule_id"] == "VALID-OCR-002" for finding in validation_payload["findings"])
 
 def test_upload_pdf_with_compliance_profile(client: TestClient) -> None:
     pdf_bytes = _build_pdf_bytes("Compliance profile test.")
