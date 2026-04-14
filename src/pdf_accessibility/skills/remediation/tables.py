@@ -4,6 +4,7 @@ from pdf_accessibility.core.settings import Settings
 from pdf_accessibility.models.canonical import CanonicalDocument, CanonicalRole
 from pdf_accessibility.models.remediation import RemediationAction
 from pdf_accessibility.skills.base import RemediationSkill, SkillCategory
+from pdf_accessibility.services.tables import TableDetectionService
 
 class TableRepairSkill(RemediationSkill):
     @property
@@ -32,6 +33,7 @@ class TableRepairSkill(RemediationSkill):
         settings: Settings,
     ) -> list[RemediationAction]:
         actions = []
+        detector = TableDetectionService()
         
         # Build block lookup
         block_lookup = {}
@@ -40,12 +42,29 @@ class TableRepairSkill(RemediationSkill):
                 block_lookup[block.block_id] = block
         
         for page in canonical_doc.pages:
+            # If no tables detected yet, run detection
+            if not page.tables:
+                page.tables = detector.detect_tables(page)
+                if page.tables:
+                    actions.append(RemediationAction(
+                        action_id=f"{page.page_number}-detect-REMED-TBL-001",
+                        rule_id=self.skill_id,
+                        page_number=page.page_number,
+                        source="deterministic-remediation",
+                        description=f"Detected {len(page.tables)} table(s) on page {page.page_number}.",
+                        changed=True
+                    ))
+
             for table in page.tables:
                 for row_idx, row in enumerate(table.rows):
                     for cell in row.cells:
-                        # Infer role: first row might be header
-                        role = CanonicalRole.table_header if row_idx == 0 else CanonicalRole.table_data
-                        cell.role = role
+                        # Infer role: first row should be header unless explicitly already header
+                        # If it's generic 'table' or 'table_data' in first row, promote to header
+                        if cell.role == CanonicalRole.table or (row_idx == 0 and cell.role == CanonicalRole.table_data):
+                             role = CanonicalRole.table_header if row_idx == 0 else CanonicalRole.table_data
+                             cell.role = role
+                        else:
+                             role = cell.role
                         
                         for block_id in cell.block_ids:
                             if block_id in block_lookup:
@@ -62,7 +81,7 @@ class TableRepairSkill(RemediationSkill):
                                         description=f"Assigned {role.value} role to table cell block.",
                                         changed=True,
                                         field_name="role",
-                                        before_value=old_role.value,
+                                        before_value=old_role.value if old_role else None,
                                         after_value=role.value
                                     ))
         
