@@ -63,18 +63,34 @@ class TableDetectionService:
                 row_map: dict[int, list[CanonicalCell]] = {}
                 for cell_info in tab.cells:
                     r_idx = cell_info[0] # row index
+                    # cell_info[1] is col_idx
+                    rspan = cell_info[2] # rowspan
+                    cspan = cell_info[3] # colspan
                     rect = cell_info[4] # fitz.Rect
                     
                     # Find which canonical blocks intersect with this cell rect
                     intersecting_block_ids = []
+                    is_header = False
                     for block in page.blocks:
                         block_rect = fitz.Rect(block.bbox.x0, block.bbox.y0, block.bbox.x1, block.bbox.y1)
                         if rect.intersects(block_rect):
                             intersecting_block_ids.append(block.block_id)
+                            # Simple heuristic: if any block in cell is bold, might be header
+                            # MuPDF also has tab.header info but it's per column
+                            if block.font_flags and (block.font_flags & 2**4): # 2^4 is often Bold
+                                is_header = True
                     
+                    # Alternatively, use tab.header info if it exists
+                    if hasattr(tab, "header") and tab.header:
+                        # If this cell is in the header row
+                        if r_idx < tab.header.row_count:
+                            is_header = True
+
                     cell = CanonicalCell(
                         bbox=BoundingBox(x0=rect.x0, y0=rect.y0, x1=rect.x1, y1=rect.y1),
-                        role=CanonicalRole.table_data, # Initial role
+                        role=CanonicalRole.table_header if is_header else CanonicalRole.table_data,
+                        rowspan=rspan,
+                        colspan=cspan,
                         block_ids=intersecting_block_ids
                     )
                     if r_idx not in row_map:
@@ -121,13 +137,17 @@ class TableDetectionService:
             min_x = min_y = float('inf')
             max_x = max_y = float('-inf')
             sorted_y = sorted(rows_map.keys())
-            for y in sorted_y:
+            for idx, y in enumerate(sorted_y):
                 row_blocks = sorted(rows_map[y], key=lambda b: b.bbox.x0)
                 cells = []
+                # Simple heuristic for header: first row or bold text
+                is_header_row = (idx == 0)
+                
                 for block in row_blocks:
+                    is_header = is_header_row or (block.font_flags and (block.font_flags & 16))
                     cells.append(CanonicalCell(
                         bbox=block.bbox,
-                        role=CanonicalRole.table_data,
+                        role=CanonicalRole.table_header if is_header else CanonicalRole.table_data,
                         block_ids=[block.block_id]
                     ))
                     min_x = min(min_x, block.bbox.x0)
